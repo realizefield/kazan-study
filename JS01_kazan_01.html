@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>火山の構造：js01_kazan_01</title>
+    <style>
+        :root { --primary-color: #2c3e50; --nav-color: #34495e; --bg-color: #f8f9fa; --drop-zone-bg: #fff9c4; }
+        body { font-family: sans-serif; background-color: var(--bg-color); margin: 0; padding: 0; }
+        .sticky-header { position: sticky; top: 0; background: var(--bg-color); padding: 10px 0; z-index: 1000; border-bottom: 2px solid #ddd; }
+        .container { max-width: 1050px; margin: 20px auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+        .nav-tabs { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 20px; border-bottom: 2px solid #ddd; padding-bottom: 10px; }
+        .nav-tab-btn { padding: 8px 12px; background: #f0f0f0; border: 1px solid #ccc; border-radius: 5px; text-decoration: none; color: #333; font-size: 0.85rem; font-weight: bold; }
+        .nav-tab-btn.active { background: var(--nav-color); color: white; border-color: var(--nav-color); }
+        .challenge-panel { background: #333; color: #fff; padding: 10px; border-radius: 8px; display: flex; justify-content: space-around; align-items: center; max-width: 1050px; margin: 0 auto 10px; }
+        .timer { font-size: 1.5em; color: #f1c40f; font-family: monospace; }
+        .word-bank { display: flex; flex-wrap: wrap; gap: 8px; background: #eee; padding: 15px; border-radius: 8px; border: 1px solid #ccc; max-width: 1050px; margin: 0 auto; min-height: 40px; }
+        .drag-item { background: #3498db; color: white; padding: 6px 14px; border-radius: 20px; cursor: pointer; font-weight: bold; font-size: 0.85em; }
+        .drag-item.selected { background: #f1c40f; color: #333; border: 2px solid #e67e22; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { border: 1px solid #bdc3c7; padding: 10px; text-align: center; }
+        th { background-color: #ecf0f1; }
+        .drop-zone { display: inline-block; min-width: 80px; min-height: 1.5em; background: var(--drop-zone-bg); border: 2px dashed #f1c40f; border-radius: 4px; vertical-align: middle; cursor: pointer; }
+        .drop-zone.correct { background: #d4edda !important; border: 2px solid #28a745 !important; }
+        .drop-zone.wrong { background: #f8d7da !important; border: 2px solid #dc3545 !important; }
+        .controls { text-align: center; margin-top: 30px; padding-bottom: 50px; display: flex; justify-content: center; gap: 15px; }
+        .main-btn { padding: 12px 25px; font-size: 1rem; cursor: pointer; border: none; border-radius: 6px; font-weight: bold; color: white; }
+        .challenge-btn { background: #e67e22; }
+        .check-btn { background: #27ae60; }
+        .reset-btn { background: #95a5a6; }
+    </style>
+</head>
+<body>
+<div class="sticky-header">
+    <div class="challenge-panel">
+        <div>TIME: <span id="timerDisplay" class="timer">00:00.0</span></div>
+        <div id="recordDisplay" style="font-size:0.8em;">記録なし</div>
+    </div>
+    <div id="wordBank" class="word-bank">「チャレンジ開始」で語群が表示されます。</div>
+</div>
+<div class="container">
+    <div class="nav-tabs">
+        <a href="js01_kazan_01.html" class="nav-tab-btn active">01.火山の構造</a>
+        <a href="js01_kazan_02.html" class="nav-tab-btn">02.形と性質</a>
+        <a href="js01_kazan_03.html" class="nav-tab-btn">03.火成岩の種類</a>
+        <a href="js01_kazan_04.html" class="nav-tab-btn">04.造岩鉱物</a>
+        <a href="js01_kazan_05.html" class="nav-tab-btn">05.火成岩の成分</a>
+    </div>
+    <table>
+        <tr><th>項目</th><th>名称（穴埋め）</th><th>詳細説明</th></tr>
+        <tr><td>①</td><td><div class="drop-zone" data-ans="マグマ" onclick="zoneClicked(this)"></div></td><td style="text-align:left;">プレート同士がぶつかり岩石の一部が溶けたもの。</td></tr>
+        <tr><td>②</td><td><div class="drop-zone" data-ans="溶岩" onclick="zoneClicked(this)"></div></td><td style="text-align:left;">マグマが地表に出てきたもの。</td></tr>
+        <tr><td>③・④</td><td><div class="drop-zone" data-ans="800" onclick="zoneClicked(this)"></div>℃ ～ <div class="drop-zone" data-ans="1200" onclick="zoneClicked(this)"></div>℃</td><td style="text-align:left;">地表に流出したときの温度。</td></tr>
+        <tr><td>⑤</td><td><div class="drop-zone" data-ans="マグマだまり" onclick="zoneClicked(this)"></div></td><td style="text-align:left;">地表に流出する前にいったん蓄えられる場所。</td></tr>
+        <tr><td colspan="3"><img src="image_4ce89f.png" style="max-width:100%;"></td></tr>
+    </table>
+    <div class="controls">
+        <button class="main-btn challenge-btn" onclick="startChallenge()">チャレンジ開始！ (答えを隠す)</button>
+        <button class="main-btn check-btn" onclick="checkAnswers()">答え合わせ</button>
+        <button class="main-btn reset-btn" onclick="showModel()">お手本に戻す</button>
+    </div>
+</div>
+<script>
+    const words = ["マグマ", "溶岩", "800", "1200", "マグマだまり"];
+    let startTime, timerInterval, isRunning = false, selectedWord = null;
+    function zoneClicked(z){ if(isRunning && selectedWord){ z.innerText = selectedWord.innerText; selectedWord.classList.remove('selected'); selectedWord = null; } }
+    function startChallenge(){
+        isRunning = true; startTime = Date.now();
+        timerInterval = setInterval(()=> document.getElementById('timerDisplay').innerText = ((Date.now()-startTime)/1000).toFixed(1)+"s", 100);
+        document.querySelectorAll('.drop-zone').forEach(z=>{ z.innerText=""; z.className="drop-zone"; });
+        const bank = document.getElementById('wordBank'); bank.innerHTML = "";
+        [...words].sort(()=>Math.random()-0.5).forEach(w=>{
+            const d = document.createElement('div'); d.className='drag-item'; d.innerText=w;
+            d.onclick=function(){ if(selectedWord)selectedWord.classList.remove('selected'); selectedWord=this; this.classList.add('selected'); };
+            bank.appendChild(d);
+        });
+    }
+    function checkAnswers(){
+        let ok=true; document.querySelectorAll('.drop-zone').forEach(z=>{
+            if(z.innerText===z.getAttribute('data-ans')) z.className="drop-zone correct";
+            else { z.className="drop-zone wrong"; ok=false; }
+        });
+        if(ok && isRunning){ clearInterval(timerInterval); isRunning=false; alert("合格！"); }
+    }
+    function showModel(){ clearInterval(timerInterval); isRunning=false; document.querySelectorAll('.drop-zone').forEach(z=>{ z.innerText=z.getAttribute('data-ans'); z.className="drop-zone"; }); }
+    showModel();
+</script>
+</body>
+</html>

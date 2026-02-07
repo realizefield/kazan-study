@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>火成岩の成分：js01_kazan_05</title>
+    <style>
+        :root { --primary-color: #2c3e50; --bg-color: #f8f9fa; --drop-zone-bg: #fff9c4; --nav-color: #34495e; }
+        body { font-family: sans-serif; background-color: var(--bg-color); margin: 0; padding: 0; }
+        
+        /* 固定ヘッダー */
+        .sticky-header { 
+            position: sticky; top: 0; background: var(--bg-color); 
+            padding: 10px 0; z-index: 1000; border-bottom: 2px solid #ddd; 
+        }
+
+        .container { 
+            max-width: 1050px; margin: 20px auto; background: white; 
+            padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); 
+        }
+        
+        /* ナビゲーションメニュー（本文幅に合わせた配置） */
+        .nav-tabs { 
+            display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 20px; 
+            border-bottom: 2px solid #ddd; padding-bottom: 10px; 
+        }
+        .nav-tab-btn { 
+            padding: 8px 12px; background: #f0f0f0; border: 1px solid #ccc; 
+            border-radius: 5px; text-decoration: none; color: #333; 
+            font-size: 0.85rem; font-weight: bold; transition: 0.2s;
+        }
+        .nav-tab-btn:hover { background: #e0e0e0; }
+        .nav-tab-btn.active { 
+            background: var(--nav-color); color: white; border-color: var(--nav-color); 
+        }
+
+        .challenge-panel { 
+            background: #333; color: #fff; padding: 10px; border-radius: 8px; 
+            display: flex; justify-content: space-around; align-items: center; 
+            max-width: 1050px; margin: 0 auto 10px; 
+        }
+        .timer { font-size: 1.5em; color: #f1c40f; font-family: monospace; }
+        
+        .word-bank { 
+            display: flex; flex-wrap: wrap; gap: 8px; background: #eee; 
+            padding: 15px; border-radius: 8px; border: 1px solid #ccc; 
+            max-width: 1050px; margin: 0 auto; min-height: 40px;
+        }
+        .drag-item { 
+            background: #3498db; color: white; padding: 6px 12px; border-radius: 20px; 
+            cursor: pointer; font-weight: bold; font-size: 0.85em; 
+        }
+        .drag-item.selected { background: #f1c40f; color: #333; border: 2px solid #e67e22; }
+
+        .diagram-area { text-align: center; margin: 20px 0; position: relative; }
+        .diagram-img { max-width: 100%; height: auto; border: 1px solid #ccc; }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; table-layout: fixed; }
+        th, td { border: 1px solid #bdc3c7; padding: 8px 4px; text-align: center; font-size: 0.9em; }
+        th { background-color: #ecf0f1; width: 140px; }
+
+        .drop-zone { 
+            display: inline-block; min-width: 70px; min-height: 1.4em; 
+            background: var(--drop-zone-bg); border: 2px dashed #f1c40f; 
+            border-radius: 4px; vertical-align: middle; cursor: pointer; 
+        }
+        .drop-zone.correct { background: #d4edda !important; border: 2px solid #28a745 !important; }
+        .drop-zone.wrong { background: #f8d7da !important; border: 2px solid #dc3545 !important; }
+
+        .mnemonics-pop { 
+            margin-top: 30px; background: #fce4ec; border: 2px solid #f06292; 
+            border-radius: 12px; padding: 20px; text-align: center; font-weight: bold; color: #880e4f; 
+        }
+
+        /* 下部操作ボタン（統一デザイン） */
+        .controls { text-align: center; margin-top: 30px; padding-bottom: 50px; display: flex; justify-content: center; gap: 15px; }
+        .main-btn { 
+            padding: 12px 25px; font-size: 1rem; cursor: pointer; border: none; 
+            border-radius: 6px; font-weight: bold; color: white; transition: 0.2s;
+        }
+        .challenge-btn { background: #e67e22; }
+        .check-btn { background: #27ae60; }
+        .reset-btn { background: #95a5a6; }
+        .main-btn:hover { opacity: 0.9; transform: translateY(-1px); }
+    </style>
+</head>
+<body>
+
+<div class="sticky-header">
+    <div class="challenge-panel">
+        <div>TIME: <span id="timerDisplay" class="timer">00:00.0</span></div>
+        <div id="recordDisplay" style="font-size:0.8em;">記録なし</div>
+    </div>
+    <div id="wordBank" class="word-bank">「チャレンジ開始」で語群が表示されます。</div>
+</div>
+
+    <div class="container">
+    <div class="nav-tabs">
+    <a href="js01_kazan_01.html" class="nav-tab-btn">01.火山の構造</a>
+    <a href="js01_kazan_02.html" class="nav-tab-btn">02.形と性質</a>
+    <a href="js01_kazan_03.html" class="nav-tab-btn">03.火成岩の種類</a>
+    <a href="js01_kazan_04.html" class="nav-tab-btn">04.造岩鉱物</a>
+    <a href="js01_kazan_05.html" class="nav-tab-btn active">05.火成岩の成分</a>
+    </div>
+
+    <div class="diagram-area">
+        <img src="image_zouganwariai.png" class="diagram-img" alt="造岩鉱物の割合グラフ">
+        <div style="position:absolute; top:12%; left:32%;">①<div class="drop-zone" data-ans="石英" onclick="zoneClicked(this)"></div></div>
+        <div style="position:absolute; top:38%; left:32%;">②<div class="drop-zone" data-ans="長石" onclick="zoneClicked(this)"></div></div>
+        <div style="position:absolute; top:88%; left:30%;">③<div class="drop-zone" data-ans="黒雲母" onclick="zoneClicked(this)"></div></div>
+        <div style="position:absolute; top:75%; left:52%;">④<div class="drop-zone" data-ans="カクセン石" onclick="zoneClicked(this)"></div></div>
+        <div style="position:absolute; top:65%; left:82%;">⑤<div class="drop-zone" data-ans="輝石" onclick="zoneClicked(this)"></div></div>
+        <div style="position:absolute; top:90%; left:82%;">⑥<div class="drop-zone" data-ans="カンラン石" onclick="zoneClicked(this)"></div></div>
+    </div>
+
+    <table>
+        <tr><th>火山岩</th><td>⑦ <div class="drop-zone" data-ans="流紋岩" onclick="zoneClicked(this)"></div></td><td>⑧ <div class="drop-zone" data-ans="安山岩" onclick="zoneClicked(this)"></div></td><td>⑨ <div class="drop-zone" data-ans="玄武岩" onclick="zoneClicked(this)"></div></td></tr>
+        <tr><th>深成岩</th><td>⑩ <div class="drop-zone" data-ans="花こう岩" onclick="zoneClicked(this)"></div></td><td>⑪ <div class="drop-zone" data-ans="せん緑岩" onclick="zoneClicked(this)"></div></td><td>⑫ <div class="drop-zone" data-ans="斑れい岩" onclick="zoneClicked(this)"></div></td></tr>
+        <tr><th>色</th><td>⑬ <div class="drop-zone" data-ans="白色" onclick="zoneClicked(this)"></div></td><td>⑭ <div class="drop-zone" data-ans="灰色" onclick="zoneClicked(this)"></div></td><td>⑮ <div class="drop-zone" data-ans="黒色" onclick="zoneClicked(this)"></div></td></tr>
+        <tr><th>二酸化ケイ素の量</th><td>⑯ <div class="drop-zone" data-ans="多い" onclick="zoneClicked(this)"></div></td><td></td><td>⑰ <div class="drop-zone" data-ans="少ない" onclick="zoneClicked(this)"></div></td></tr>
+        <tr><th>密度 g/cm³</th><td>2.7</td><td></td><td>3.2</td></tr>
+        <tr><th>溶岩の粘り気</th><td>⑱ <div class="drop-zone" data-ans="大きい" onclick="zoneClicked(this)"></div></td><td></td><td>⑲ <div class="drop-zone" data-ans="小さい" onclick="zoneClicked(this)"></div></td></tr>
+        <tr><th>火山の形</th><td>⑳ <div class="drop-zone" data-ans="鐘状火山" onclick="zoneClicked(this)"></div></td><td>㉑ <div class="drop-zone" data-ans="成層火山" onclick="zoneClicked(this)"></div></td><td>㉒ <div class="drop-zone" data-ans="盾状火山" onclick="zoneClicked(this)"></div></td></tr>
+    </table>
+
+    <div style="background:#fdfaf0; padding:15px; border-radius:8px; margin-top:20px; line-height:2.2;">
+        【問 1】 P線上の石英 20%, 長石 60%, 黒雲母 20%の白色ではん状組織なら <div class="drop-zone" data-ans="流紋岩" onclick="zoneClicked(this)"></div> 等粒状なら <div class="drop-zone" data-ans="花こう岩" onclick="zoneClicked(this)"></div> です。<br>
+        【問 2】 Q線上の長石 45%, 輝石 35%, カンラン石 20%の黒っぽいはん状なら <div class="drop-zone" data-ans="玄武岩" onclick="zoneClicked(this)"></div> 等粒状なら <div class="drop-zone" data-ans="斑れい岩" onclick="zoneClicked(this)"></div> です。
+    </div>
+
+    <div class="mnemonics-pop">リカちゃん、あせって、ゲップした（流・花 ／ 安・せん ／ 玄・斑）</div>
+
+    <div class="controls">
+        <button class="main-btn challenge-btn" onclick="startChallenge()">チャレンジ開始！ (答えを隠す)</button>
+        <button class="main-btn check-btn" onclick="checkAnswers()">答え合わせ</button>
+        <button class="main-btn reset-btn" onclick="showModel()">お手本に戻す</button>
+    </div>
+</div>
+
+<script>
+    const words = ["石英","長石","黒雲母","カクセン石","輝石","カンラン石","流紋岩","安山岩","玄武岩","花こう岩","せん緑岩","斑れい岩","白色","灰色","黒色","多い","少ない","大きい","小さい","鐘状火山","成層火山","盾状火山"];
+    let startTime, timerInterval, isRunning = false, selectedWord = null;
+
+    function zoneClicked(z){ 
+        if(isRunning && selectedWord){ 
+            z.innerText = selectedWord.innerText; 
+            selectedWord.classList.remove('selected'); 
+            selectedWord = null; 
+        } 
+    }
+
+    function startChallenge(){
+        isRunning = true; startTime = Date.now();
+        timerInterval = setInterval(()=> {
+            document.getElementById('timerDisplay').innerText = ((Date.now()-startTime)/1000).toFixed(1)+"s";
+        }, 100);
+        document.querySelectorAll('.drop-zone').forEach(z=>{ z.innerText=""; z.className="drop-zone"; });
+        const bank = document.getElementById('wordBank'); bank.innerHTML = "";
+        [...new Set(words)].sort(()=>Math.random()-0.5).forEach(w=>{
+            const d = document.createElement('div'); d.className='drag-item'; d.innerText=w;
+            d.onclick=function(){ 
+                if(selectedWord)selectedWord.classList.remove('selected'); 
+                selectedWord=this; this.classList.add('selected'); 
+            };
+            bank.appendChild(d);
+        });
+    }
+
+    function checkAnswers(){
+        let ok=true; 
+        document.querySelectorAll('.drop-zone').forEach(z=>{
+            if(z.innerText.trim()===z.getAttribute('data-ans')) z.className="drop-zone correct";
+            else { z.className="drop-zone wrong"; ok=false; }
+        });
+        if(ok && isRunning){ clearInterval(timerInterval); isRunning=false; alert("合格！タイム: " + document.getElementById('timerDisplay').innerText); }
+    }
+
+    function showModel(){ 
+        clearInterval(timerInterval); isRunning=false; 
+        document.getElementById('wordBank').innerHTML = "お手本表示中。";
+        document.querySelectorAll('.drop-zone').forEach(z=>{ z.innerText=z.getAttribute('data-ans'); z.className="drop-zone"; }); 
+    }
+    
+    showModel();
+</script>
+</body>
+</html>

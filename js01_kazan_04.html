@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>造岩鉱物：js01_kazan_04</title>
+    <style>
+        :root { --primary-color: #2c3e50; --bg-color: #f8f9fa; --drop-zone-bg: #fff9c4; --nav-color: #34495e; }
+        body { font-family: sans-serif; background-color: var(--bg-color); margin: 0; padding: 0; }
+        
+        /* 固定ヘッダー */
+        .sticky-header { 
+            position: sticky; top: 0; background: var(--bg-color); 
+            padding: 10px 0; z-index: 1000; border-bottom: 2px solid #ddd; 
+        }
+
+        .container { 
+            max-width: 1050px; margin: 20px auto; background: white; 
+            padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); 
+        }
+        
+        /* ナビゲーションメニュー（中央寄せ・本文幅一致） */
+        .nav-tabs { 
+            display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 20px; 
+            border-bottom: 2px solid #ddd; padding-bottom: 10px; 
+        }
+        .nav-tab-btn { 
+            padding: 8px 12px; background: #f0f0f0; border: 1px solid #ccc; 
+            border-radius: 5px; text-decoration: none; color: #333; 
+            font-size: 0.85rem; font-weight: bold; 
+        }
+        .nav-tab-btn.active { 
+            background: var(--nav-color); color: white; border-color: var(--nav-color); 
+        }
+
+        .challenge-panel { 
+            background: #333; color: #fff; padding: 10px; border-radius: 8px; 
+            display: flex; justify-content: space-around; align-items: center; 
+            max-width: 1050px; margin: 0 auto 10px; 
+        }
+        .timer { font-size: 1.5em; color: #f1c40f; font-family: monospace; }
+        
+        .word-bank { 
+            display: flex; flex-wrap: wrap; gap: 8px; background: #eee; 
+            padding: 15px; border-radius: 8px; border: 1px solid #ccc; 
+            max-width: 1050px; margin: 0 auto; min-height: 40px;
+        }
+        .drag-item { 
+            background: #3498db; color: white; padding: 6px 14px; border-radius: 20px; 
+            cursor: pointer; font-weight: bold; font-size: 0.85em; 
+        }
+        .drag-item.selected { background: #f1c40f; color: #333; }
+
+        /* 導入文 */
+        .intro-box { 
+            background: #eef7ff; padding: 15px; border-radius: 8px; 
+            border-left: 6px solid #3498db; margin-bottom: 20px; font-weight: bold; 
+        }
+
+        table { width: 100%; border-collapse: collapse; table-layout: fixed; margin-top: 20px; }
+        th, td { border: 1px solid #bdc3c7; padding: 8px; text-align: center; font-size: 0.85em; }
+        .drop-zone { 
+            display: inline-block; min-width: 60px; min-height: 1.4em; 
+            background: var(--drop-zone-bg); border: 2px dashed #f1c40f; 
+            border-radius: 4px; vertical-align: middle; cursor: pointer; 
+        }
+        .drop-zone.correct { background: #d4edda !important; border: 2px solid #28a745 !important; }
+        .drop-zone.wrong { background: #f8d7da !important; border: 2px solid #dc3545 !important; }
+        
+        .crystal-img { max-height: 60px; max-width: 100%; border-radius: 4px; }
+        
+        .origin-pop { 
+            margin-top: 30px; background: #fff3e0; border: 2px solid #ff9800; 
+            border-radius: 12px; padding: 20px; position: relative; 
+        }
+        .origin-pop::before { 
+            content: "名前の由来"; position: absolute; top: -15px; left: 20px; 
+            background: #ff9800; color: white; padding: 2px 10px; 
+            border-radius: 10px; font-weight: bold; 
+        }
+
+        /* 下部操作ボタン（01, 02, 03と完全統一） */
+        .controls { text-align: center; margin-top: 30px; padding-bottom: 50px; display: flex; justify-content: center; gap: 15px; }
+        .main-btn { 
+            padding: 12px 25px; font-size: 1rem; cursor: pointer; border: none; 
+            border-radius: 6px; font-weight: bold; color: white; transition: 0.2s;
+        }
+        .challenge-btn { background: #e67e22; }
+        .check-btn { background: #27ae60; }
+        .reset-btn { background: #95a5a6; }
+        .main-btn:hover { opacity: 0.9; transform: translateY(-1px); }
+    </style>
+</head>
+<body>
+
+<div class="sticky-header">
+    <div class="challenge-panel">
+        <div>TIME: <span id="timerDisplay" class="timer">00:00.0</span></div>
+        <div id="recordDisplay" style="font-size:0.8em;">記録なし</div>
+    </div>
+    <div id="wordBank" class="word-bank">「チャレンジ開始」で語群が表示されます。</div>
+</div>
+
+<div class="container">
+    <div class="nav-tabs">
+        <a href="js01_kazan_01.html" class="nav-tab-btn">01.火山の構造</a>
+        <a href="js01_kazan_02.html" class="nav-tab-btn">02.形と性質</a>
+        <a href="js01_kazan_03.html" class="nav-tab-btn">03.火成岩の種類</a>
+        <a href="js01_kazan_04.html" class="nav-tab-btn active">04.造岩鉱物</a>
+        <a href="js01_kazan_05.html" class="nav-tab-btn">05.火成岩の成分</a>
+    </div>
+
+    <div class="intro-box">
+        岩石に含まれる鉱物を①<div class="drop-zone" data-ans="造岩鉱物" onclick="zoneClicked(this)"></div>といいます。白色・無色の②<div class="drop-zone" data-ans="無色" onclick="zoneClicked(this)"></div>鉱物と、色のついた③<div class="drop-zone" data-ans="有色" onclick="zoneClicked(this)"></div>鉱物があります。
+    </div>
+
+    <table>
+        <tr><th style="width:10%;">分類</th><th style="width:12%;">鉱物の名</th><th style="width:15%;">色</th><th style="width:18%;">割れ方</th><th style="width:15%;">図</th><th>特徴</th></tr>
+        <tr><td rowspan="2">無色</td><td>④ <div class="drop-zone" data-ans="石英" onclick="zoneClicked(this)"></div></td><td>⑩ <div class="drop-zone" data-ans="白色" onclick="zoneClicked(this)"></div></td><td>⑬ <div class="drop-zone" data-ans="不規則" onclick="zoneClicked(this)"></div></td><td><img src="image_e58e1d.png" class="crystal-img"></td><td style="text-align:left;">非常に固い。宝石→水晶</td></tr>
+        <tr><td>⑤ <div class="drop-zone" data-ans="長石" onclick="zoneClicked(this)"></div></td><td>⑪ <div class="drop-zone" data-ans="白色" onclick="zoneClicked(this)"></div></td><td>規則的</td><td><img src="image_e58e3a.png" class="crystal-img"></td><td style="text-align:left;">すべての火成岩に含まれている。</td></tr>
+        <tr><td rowspan="4">有色</td><td>⑥ <div class="drop-zone" data-ans="黒雲母" onclick="zoneClicked(this)"></div></td><td>⑫ <div class="drop-zone" data-ans="黒色" onclick="zoneClicked(this)"></div></td><td>⑭ <div class="drop-zone" data-ans="うすくはがれる" onclick="zoneClicked(this)"></div></td><td><img src="image_e58e58.png" class="crystal-img"></td><td style="text-align:left;">電気アイロンなど絶縁体として使われていた。</td></tr>
+        <tr><td>⑦ <div class="drop-zone" data-ans="カクセン石" onclick="zoneClicked(this)"></div></td><td>暗緑色</td><td>規則的</td><td><img src="image_e58e76.png" class="crystal-img"></td><td style="text-align:left;">長い柱状。ガラスのような光沢がある。</td></tr>
+        <tr><td>⑧ <div class="drop-zone" data-ans="キ石" onclick="zoneClicked(this)"></div></td><td>暗緑色</td><td>規則制</td><td><img src="image_e58e93.png" class="crystal-img"></td><td style="text-align:left;">短い柱状。ガラスのような光沢がある。</td></tr>
+        <tr><td>⑨ <div class="drop-zone" data-ans="カンラン石" onclick="zoneClicked(this)"></div></td><td>黄緑色</td><td>⑮ <div class="drop-zone" data-ans="不規則" onclick="zoneClicked(this)"></div></td><td><img src="image_e58e9c.png" class="crystal-img"></td><td style="text-align:left;">橄欖はオリーブのこと。宝石→ペリドット</td></tr>
+    </table>
+
+    <div class="origin-pop">
+        <p><strong>角閃石:</strong> 断面に角があり、結晶の面がキラキラと輝く（閃く）ことから。長い柱状。<br><strong>輝石:</strong> 結晶の面が強く輝くことから。角閃石に比べて短い柱状。</p>
+    </div>
+
+    <div class="controls">
+        <button class="main-btn challenge-btn" onclick="startChallenge()">チャレンジ開始！ (答えを隠す)</button>
+        <button class="main-btn check-btn" onclick="checkAnswers()">答え合わせ</button>
+        <button class="main-btn reset-btn" onclick="showModel()">お手本に戻す</button>
+    </div>
+</div>
+
+<script>
+    const words = ["造岩鉱物","無色","有色","石英","長石","黒雲母","カクセン石","キ石","カンラン石","白色","黒色","不規則","うすくはがれる"];
+    let startTime, timerInterval, isRunning = false, selectedWord = null;
+
+    function zoneClicked(z){ 
+        if(isRunning && selectedWord){ 
+            z.innerText = selectedWord.innerText; 
+            selectedWord.classList.remove('selected'); 
+            selectedWord = null; 
+        } 
+    }
+
+    function startChallenge(){
+        isRunning = true; startTime = Date.now();
+        timerInterval = setInterval(()=> {
+            document.getElementById('timerDisplay').innerText = ((Date.now()-startTime)/1000).toFixed(1)+"s";
+        }, 100);
+        document.querySelectorAll('.drop-zone').forEach(z=>{ z.innerText=""; z.className="drop-zone"; });
+        const bank = document.getElementById('wordBank'); bank.innerHTML = "";
+        [...new Set(words)].sort(()=>Math.random()-0.5).forEach(w=>{
+            const d = document.createElement('div'); d.className='drag-item'; d.innerText=w;
+            d.onclick=function(){ 
+                if(selectedWord)selectedWord.classList.remove('selected'); 
+                selectedWord=this; this.classList.add('selected'); 
+            };
+            bank.appendChild(d);
+        });
+    }
+
+    function checkAnswers(){
+        let ok=true; 
+        document.querySelectorAll('.drop-zone').forEach(z=>{
+            if(z.innerText===z.getAttribute('data-ans')) z.className="drop-zone correct";
+            else { z.className="drop-zone wrong"; ok=false; }
+        });
+        if(ok && isRunning){ clearInterval(timerInterval); isRunning=false; alert("合格！"); }
+    }
+
+    function showModel(){ 
+        clearInterval(timerInterval); isRunning=false; 
+        document.getElementById('wordBank').innerHTML = "お手本表示中。";
+        document.querySelectorAll('.drop-zone').forEach(z=>{ z.innerText=z.getAttribute('data-ans'); z.className="drop-zone"; }); 
+    }
+    
+    showModel();
+</script>
+</body>
+</html>

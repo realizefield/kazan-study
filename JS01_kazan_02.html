@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>中学生理科：火山の形と性質</title>
+    <style>
+        :root { --primary-color: #2c3e50; --nav-color: #34495e; --bg-color: #f8f9fa; --drop-zone-bg: #fff9c4; }
+        body { font-family: "Helvetica Neue", Arial, sans-serif; background-color: var(--bg-color); padding: 20px; }
+        .container { max-width: 1000px; margin: auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+        
+        /* ナビゲーションボタンエリア */
+        .nav-tabs { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 20px; border-bottom: 2px solid #ddd; padding-bottom: 10px; }
+        .nav-tab-btn { padding: 8px 12px; background: #f0f0f0; border: 1px solid #ccc; border-radius: 5px; text-decoration: none; color: #333; font-size: 0.85rem; font-weight: bold; transition: 0.2s; }
+        .nav-tab-btn:hover { background: #e0e0e0; }
+        .nav-tab-btn.active { background: var(--nav-color); color: white; border-color: var(--nav-color); }
+
+        .challenge-panel { background: #333; color: #fff; padding: 15px; border-radius: 8px; margin-bottom: 20px; display: flex; justify-content: space-around; align-items: center; }
+        .timer { font-size: 1.5em; font-family: monospace; color: #f1c40f; }
+        .records { font-size: 0.8em; text-align: left; }
+        
+        .header-intro { background: #eef7ff; padding: 15px; border-radius: 8px; border-left: 6px solid #3498db; margin-bottom: 20px; line-height: 1.6; }
+        
+        .word-bank-container { background: #eee; padding: 15px; border-radius: 8px; margin-bottom: 10px; border: 1px solid #ccc; }
+        .word-bank { display: flex; flex-wrap: wrap; gap: 8px; min-height: 40px; align-items: center; }
+        .drag-item { background: #3498db; color: white; padding: 5px 12px; border-radius: 20px; cursor: pointer; font-weight: bold; font-size: 0.85em; user-select: none; transition: 0.2s; border: 2px solid transparent; }
+        .drag-item.selected { background: #f1c40f; color: #333; border: 2px solid #e67e22; transform: translateY(-2px); }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; table-layout: fixed; }
+        th, td { border: 1px solid #bdc3c7; padding: 10px 5px; text-align: center; vertical-align: middle; font-size: 0.9em; }
+        th { background-color: #ecf0f1; }
+        .label-cell { background-color: #f9f9f9; width: 115px; font-weight: bold; }
+        .volcano-img { max-width: 100%; max-height: 90px; }
+        .drop-zone { display: inline-block; min-width: 60px; min-height: 25px; background: var(--drop-zone-bg); border: 2px dashed #f1c40f; border-radius: 4px; vertical-align: middle; padding: 2px 8px; cursor: pointer; }
+        .drop-zone.correct { background: #d4edda !important; border: 2px solid #28a745 !important; }
+        .drop-zone.wrong { background: #f8d7da !important; border: 2px solid #dc3545 !important; }
+        .hint-btn { font-size: 0.75em; cursor: pointer; padding: 2px 5px; margin-top: 5px; background: #fff; border: 1px solid #ccc; border-radius: 3px; color: #3498db; }
+        .controls { text-align: center; margin-top: 20px; }
+        button.main-btn { padding: 10px 25px; font-size: 1em; cursor: pointer; border: none; border-radius: 5px; margin: 0 5px; font-weight: bold; }
+        .challenge-btn { background: #e67e22; color: white; }
+        .check-btn { background: #27ae60; color: white; }
+        .reset-btn { background: #95a5a6; color: white; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="nav-tabs">
+        <a href="js01_kazan_01.html" class="nav-tab-btn">01.火山の構造</a>
+        <a href="js01_kazan_02.html" class="nav-tab-btn active">02.形と性質</a>
+        <a href="js01_kazan_03.html" class="nav-tab-btn">03.火成岩の種類</a>
+        <a href="js01_kazan_04.html" class="nav-tab-btn">04.造岩鉱物</a>
+        <a href="js01_kazan_05.html" class="nav-tab-btn">05.火成岩の成分</a>
+    </div>
+
+    <h2>2. 火山の形と性質</h2>
+
+    <div class="challenge-panel">
+        <div>TIME: <span id="timerDisplay" class="timer">00:00.0</span></div>
+        <div class="records" id="recordDisplay">記録なし</div>
+        <button onclick="resetRecords()" style="font-size: 0.7em; cursor: pointer;">リセット</button>
+    </div>
+
+    <div class="header-intro">
+        火山の形は、溶岩の<strong>粘り気</strong>の違いによって決まります。マグマに<strong>二酸化ケイ素（白色の成分）</strong>が多く含まれるほど、粘り気が強くなり、盛り上がった形になります。逆に少ないと粘り気が弱く、黒っぽい平らな火山になります。
+    </div>
+
+    <h3>【語群】</h3>
+    <div class="word-bank-container">
+        <div id="wordBank" class="word-bank">チャレンジ開始で語群が表示されます。</div>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th class="label-cell">項目</th>
+                <th>
+                    <div class="drop-zone" data-ans="鐘状" onclick="zoneClicked(this)">鐘状</div> 火山
+                    <br><button class="hint-btn" onclick="alert('読み：しょうじょう\nお寺の鐘（かね）をふせたような形という意味です。')">読み・説明</button>
+                </th>
+                <th>
+                    <div class="drop-zone" data-ans="成層" onclick="zoneClicked(this)">成層</div> 火山
+                    <br><button class="hint-btn" onclick="alert('読み：せいそう\nきれいな円すい形（富士山のような形）です。')">読み・説明</button>
+                </th>
+                <th>
+                    <div class="drop-zone" data-ans="盾状" onclick="zoneClicked(this)">盾状</div> 火山
+                    <br><button class="hint-btn" onclick="alert('読み：たてじょう\n盾（たて）とは西洋の騎士が使っていた防具です。それをふせたような平らな形です。')">読み・説明</button>
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr><td class="label-cell">形（図）</td>
+                <td><img src="image_5e6004.png" class="volcano-img"></td>
+                <td><img src="image_5e6042.png" class="volcano-img"></td>
+                <td><img src="image_5e6097.png" class="volcano-img"></td>
+            </tr>
+            <tr><td class="label-cell">火山の色</td>
+                <td><div class="drop-zone" data-ans="白色" onclick="zoneClicked(this)">白色</div></td>
+                <td><div class="drop-zone" data-ans="灰色" onclick="zoneClicked(this)">灰色</div></td>
+                <td><div class="drop-zone" data-ans="黒色" onclick="zoneClicked(this)">黒色</div></td>
+            </tr>
+            <tr><td class="label-cell">粘り気</td>
+                <td><div class="drop-zone" data-ans="大" onclick="zoneClicked(this)">大</div></td>
+                <td><div class="drop-zone" data-ans="中" onclick="zoneClicked(this)">中</div></td>
+                <td><div class="drop-zone" data-ans="小" onclick="zoneClicked(this)">小</div></td>
+            </tr>
+            <tr><td class="label-cell">溶岩の温度</td>
+                <td><div class="drop-zone" data-ans="800" onclick="zoneClicked(this)">800</div> ℃</td>
+                <td><div class="drop-zone" data-ans="1000" onclick="zoneClicked(this)">1000</div> ℃</td>
+                <td><div class="drop-zone" data-ans="1200" onclick="zoneClicked(this)">1200</div> ℃</td>
+            </tr>
+            <tr><td class="label-cell">噴火時の様子</td>
+                <td><div class="drop-zone" data-ans="大爆発" onclick="zoneClicked(this)">大爆発</div></td>
+                <td><div class="drop-zone" data-ans="大爆発" onclick="zoneClicked(this)">大爆発</div></td>
+                <td><div class="drop-zone" data-ans="小爆発" onclick="zoneClicked(this)">小爆発</div></td>
+            </tr>
+            <tr><td class="label-cell">例</td>
+                <td><div class="drop-zone" data-ans="昭和新山" onclick="zoneClicked(this)">昭和新山</div></td>
+                <td><div class="drop-zone" data-ans="富士山" onclick="zoneClicked(this)">富士山</div></td>
+                <td><div class="drop-zone" data-ans="マウナロア山" onclick="zoneClicked(this)">マウナロア山</div></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="controls">
+        <button class="main-btn challenge-btn" onclick="startChallenge()">チャレンジ開始！(答えを隠す)</button>
+        <button class="main-btn check-btn" onclick="checkAnswers()">答え合わせ</button>
+        <button class="main-btn reset-btn" onclick="showModel()">お手本に戻す</button>
+    </div>
+</div>
+
+<script>
+    const words = ["鐘状", "成層", "盾状", "白色", "灰色", "黒色", "大", "中", "小", "800", "1000", "1200", "大爆発", "大爆発", "小爆発", "昭和新山", "富士山", "マウナロア山"];
+    let startTime, timerInterval, isRunning = false, selectedWord = null;
+    let bestRecords = JSON.parse(localStorage.getItem('volcano_records')) || [];
+
+    function zoneClicked(z) {
+        if (!isRunning || !selectedWord) return;
+        z.innerText = selectedWord.innerText;
+        selectedWord.classList.remove('selected');
+        selectedWord = null;
+    }
+
+    function wordClicked(element) {
+        if (!isRunning) return;
+        if (selectedWord) selectedWord.classList.remove('selected');
+        selectedWord = element;
+        selectedWord.classList.add('selected');
+    }
+
+    function showModel() {
+        clearInterval(timerInterval);
+        isRunning = false;
+        document.getElementById('timerDisplay').innerText = "00:00.0";
+        document.getElementById('wordBank').innerHTML = "お手本表示中。";
+        document.querySelectorAll('.drop-zone').forEach(z => {
+            z.innerText = z.getAttribute('data-ans');
+            z.className = "drop-zone";
+        });
+        updateRecordDisplay();
+    }
+
+    function startChallenge() {
+        isRunning = true;
+        startTime = Date.now();
+        timerInterval = setInterval(() => {
+            document.getElementById('timerDisplay').innerText = ((Date.now() - startTime) / 1000).toFixed(1) + "s";
+        }, 100);
+        document.querySelectorAll('.drop-zone').forEach(z => {
+            z.innerText = "";
+            z.className = "drop-zone";
+        });
+        const bank = document.getElementById('wordBank');
+        bank.innerHTML = "";
+        [...words].sort(() => Math.random() - 0.5).forEach((w, i) => {
+            const div = document.createElement('div');
+            div.className = 'drag-item';
+            div.innerText = w;
+            div.onclick = function() { wordClicked(this); };
+            bank.appendChild(div);
+        });
+    }
+
+    function checkAnswers() {
+        let allCorrect = true;
+        document.querySelectorAll('.drop-zone').forEach(zone => {
+            if (zone.innerText.trim() === zone.getAttribute('data-ans')) {
+                zone.className = "drop-zone correct";
+            } else {
+                zone.className = "drop-zone wrong";
+                allCorrect = false;
+            }
+        });
+        if (allCorrect && isRunning) {
+            clearInterval(timerInterval);
+            isRunning = false;
+            const finalTime = (Date.now() - startTime) / 1000;
+            saveRecord(finalTime);
+            alert("完璧です！ タイム: " + finalTime.toFixed(1) + "秒");
+        }
+    }
+
+    function saveRecord(time) {
+        bestRecords.push(time);
+        bestRecords.sort((a, b) => a - b);
+        bestRecords = bestRecords.slice(0, 3);
+        localStorage.setItem('volcano_records', JSON.stringify(bestRecords));
+        updateRecordDisplay();
+    }
+
+    function updateRecordDisplay() {
+        document.getElementById('recordDisplay').innerHTML = bestRecords.map((r, i) => `${i+1}位: ${r.toFixed(1)}s`).join(' | ') || "記録なし";
+    }
+
+    function resetRecords() {
+        localStorage.removeItem('volcano_records');
+        bestRecords = [];
+        updateRecordDisplay();
+    }
+
+    showModel();
+</script>
+</body>
+</html>
